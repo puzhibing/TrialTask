@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>首页</title>
+</head>
+<style type="text/css">
+* {
+	font-size: 2rem;
+}
+
+button {
+	width: 100vw;
+	height: 200px;
+	margin-top: 20px;
+}
+
+span {
+	margin-top: 20px;
+}
+
+.content div {
+	float: left;
+	border: 1px solid #E3E3E3;
+	margin: 20px;
+}
+</style>
+<body>
+	<div class="content">
+		<input type="hidden" class="appType" /> <input type="hidden"
+			class="identifier" />
+		<button class="refresh">刷新</button>
+		<br />
+		<button class="giveUpTask">放弃任务</button>
+	</div>
+
+</body>
+<script type="text/javascript" src="jquery-3.3.1.min.js"></script>
+<script type="text/javascript">
+	$(document).ready(function() {
+
+		obtainTaskId();
+
+		$(".giveUpTask").click(function() {
+			giveUpTask();
+		});
+
+		$(".refresh").click(function() {
+			obtainTaskId();
+		});
+	});
+
+	//获取成功抢得的任务id
+	function obtainTaskId() {
+		$
+				.ajax({
+					url : "/getTaskList",
+					type : "POST",
+					async : false,
+					success : function(res) {
+						$('.content div').remove();
+						let str = '';
+						for (var i = 0; i < res.length; i++) {
+							if (res[i].status) {
+								str += '<div class="task" onclick="selected(this)" appType="'
+										+ res[i].msg
+										+ '" identifier="'
+										+ res[i].info
+										+ '"><img src="' + res[i].img + '"><br><span>'
+										+ res[i].msg + '</span></div>';
+							} else {
+								str += '<div><img src=""><br><span>'
+										+ res[i].msg + '</span></div>';
+							}
+
+						}
+
+						$('.content').prepend(str);
+
+					}
+				});
+	}
+
+	function selected(div) {
+		let appType = $(div).attr("appType");
+		let identifier = $(div).attr("identifier");
+		$('.appType').val(appType);
+		$('.identifier').val(identifier);
+		$(div).css({
+			"border" : "1px solid #6C0E0E"
+		});
+	}
+
+	function giveUpTask(trackId) {
+		let appType = $('.appType').val();
+		let identifier = $('.identifier').val();
+
+		if ("" == appType && "" == identifier) {
+			return;
+		}
+
+		$.ajax({
+			url : "/giveUpTask",
+			type : "POST",
+			async : false,
+			data : {
+				appType : appType,
+				identifier : identifier
+			},
+			success : function(res) {
+				if (res.status) {
+					$('.appType').val("");
+					$('.identifier').val("");
+					obtainTaskId();
+				}
+			}
+		});
+	}
+</script>
+</html>
