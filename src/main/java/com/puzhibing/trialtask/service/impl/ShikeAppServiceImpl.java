@@ -96,10 +96,7 @@ public class ShikeAppServiceImpl implements IShikeAppService {
 //        System.err.println(result);
         
         ResultList list = JSON.parseObject(result, ResultList.class);
-        System.out.println("app：" + list.getData().get(0).getApp());
-        System.out.println("preList：" + list.getData().get(0).getPreList());
-        System.out.println("accPreList：" + list.getData().get(0).getAccPreList());
-        System.out.println("redList：" + list.getData().get(0).getRedList());
+
         
         List<App> apps = list.getData().get(0).getApp();//获取任务集合
         float money1 = 0.0f;
@@ -107,7 +104,10 @@ public class ShikeAppServiceImpl implements IShikeAppService {
         App app = null;
         ResultUtil resultUtil = new ResultUtil();
         if(null != apps && apps.size() != 0) {
-       
+            System.out.println("app：" + list.getData().get(0).getApp());
+            System.out.println("preList：" + list.getData().get(0).getPreList());
+            System.out.println("accPreList：" + list.getData().get(0).getAccPreList());
+            System.out.println("redList：" + list.getData().get(0).getRedList());
         	//循环遍历看是否有抢成功的
         	for (App shike : apps) {
 				if(shike.isPlaying() == true) {

@@ -13,5 +13,5 @@ public interface IShikeAppService {
 	 * 定义通过get请求获取任务列表
 	 * @return
 	 */
-	public ResultUtil getTaskList(String url, String download , String asin);
+	ResultUtil getTaskList(String url, String download , String asin);
 }
