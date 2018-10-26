@@ -39,6 +39,8 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 	@Autowired
     private ComUtil comUtil;
 
+	private Map<String , String> numMap = new HashMap<>();//计数器
+
 	@Override
 	public ResultUtil getTaskList() {
 		ResultUtil resultUtil = new ResultUtil();
@@ -102,6 +104,13 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
                     smsUtil.sendSMS("小猪APP");//调用发送短信处理
             		return resultUtil;
             	}else {
+					System.err.println("失败" + numMap.get(task.getMissionid()) + "次");
+					//判断同样的任务失败的次数大于3次，添加到失败任务中不再抢该任务
+					int j = Integer.valueOf(numMap.get(task.getMissionid())).intValue();
+					if(j >= 3){
+						comUtil.putValueInMap("xiaozhu", task.getBundleid());
+					}
+
             		resultUtil.setMsg("领取失败");
             		resultUtil.setStatus(false);
             	}
@@ -156,7 +165,6 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 			String regEx="[^0-9]";
 			Pattern p = Pattern.compile(regEx);
 			Matcher m = p.matcher(tag.text());
-			System.err.println("数量：" + m.replaceAll("").trim());
 			task.setTag(m.replaceAll("").trim());
 			task.setReward(reward.text());
 			
@@ -231,7 +239,16 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
             Result res = JSON.parseObject(result, Result.class);
             if(res.getRet() >= 0) {
             	bl = true;
-            }
+            }else{
+				//判断计数器中是否有key
+				if (numMap.containsKey(missionid)){
+					int i = Integer.valueOf(numMap.get(missionid)).intValue();
+					i++;
+					numMap.put(missionid , String.valueOf(i));
+				}else {
+					numMap.put(missionid , "1");
+				}
+			}
             
 		} catch (IOException e) {
 			e.printStackTrace();

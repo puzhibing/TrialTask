@@ -22,6 +22,7 @@ public class ComUtil {
 	public ComUtil(){
 		map = new HashMap<>();
 		map.put("shike", new ArrayList<>());
+		map.put("xiaozhu", new ArrayList<>());
 	}
 	
 	/**
