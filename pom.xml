@@ -6,7 +6,7 @@
 	<groupId>com.puzhibing</groupId>
 	<artifactId>trialtask</artifactId>
 	<version>1.0.0</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 
 	<name>TrialTask</name>
 	<description>trialtask project for Spring Boot</description>
@@ -21,7 +21,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<java.version>10</java.version>
+		<java.version>8</java.version>
 	</properties>
 
 	<dependencies>

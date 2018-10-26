@@ -81,7 +81,6 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
             Map<String, Object> map = analysisResult(out.toString());
             if((boolean)map.get("status")) {//判断是否有任务正在进行中
             	Task task = (Task)map.get("task");
-            	
             	resultUtil.setMsg("xiaozhu");
         		resultUtil.setStatus(true);
         		resultUtil.setImg(task.getImg());
@@ -168,16 +167,15 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 		Task task = null;
 		float am = 0f;
 		for (Task t : tasks) {
+			//判断当前任务是否在放弃任务集合中，包含则不需要抢该任务
+			boolean b = comUtil.judgeWhetherIncludeValue("xiaozhu", t.getBundleid());
+			if(b) {
+				continue;
+			}
+
 			System.out.println(t.toString());
 			float f = Float.parseFloat(t.getReward());
-//			String tag = t.getTag();
-//			tag = tag.substring(1, tag.length() - 1);
 			if(f >= am && Integer.valueOf(t.getTag()) > 0) {
-				//判断当前任务是否在放弃任务集合中，包含则不需要抢该任务
-				boolean b = comUtil.judgeWhetherIncludeValue("xiaozhu", t.getBundleid());
-				if(b) {
-					continue;
-				}
 				task = t;
 				am = f;
 			}
@@ -230,14 +228,12 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
                 result += line;
             }
             System.err.println(result);
-            
             Result res = JSON.parseObject(result, Result.class);
-            if(res.getRet() == 0) {
+            if(res.getRet() >= 0) {
             	bl = true;
             }
             
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return bl;

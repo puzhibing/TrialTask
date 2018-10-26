@@ -19,6 +19,7 @@ import com.puzhibing.trialtask.pojo.shike.ResultList;
 import com.puzhibing.trialtask.service.IShikeAppService;
 import com.puzhibing.trialtask.util.ComUtil;
 import com.puzhibing.trialtask.util.ResultUtil;
+import org.springframework.util.StringUtils;
 
 
 /**
@@ -40,8 +41,11 @@ public class ShikeAppServiceImpl implements IShikeAppService {
 	 * @see com.puzhibing.testPlayAid.service.IShikeAppService#sendGet(java.lang.String, java.lang.String)
 	 */
 	@Override
-	public ResultUtil getTaskList(String url, String download , String asin) {
-		String result = "";
+	public ResultUtil getTaskList() {
+        String url = "http://shike.com/shike/api/appList";
+        String download = "1";
+        String asin = "qLgKdimlcEzTNHiZTdJvd%2B%2B%2B6GQQz9WlpjYDe%2BM4%2BZ87GVf%2FYJRdh%2FFUKDzSv4rvkFDGwzFW3oz6B4YSaF6LMNQtUCBh8Suiw49XR4iOIwQBinKX%2BUjSWUffZ7dSTK3S3WgHB2VyLSt5d9yzHx%2B%2BrnkXCfAaW27%2BnCc52w%2FR7eoIHt2rB0zyT6fkilXYlpwMXGL%2BGhfxkoxGjmVC%2BvqGYMuSjjyvN5z5yXyxH2GZ%2F%2F4DBSpKZTXIL2P76ui1wzFL2UFJ0EB9HnQPdxb8Y6NSQA%3D%3D";
+        String result = "";
         BufferedReader in = null;
         try {
             String urlNameString = url + "?download=" + download + "&asin=" + asin;
@@ -93,11 +97,12 @@ public class ShikeAppServiceImpl implements IShikeAppService {
                 e2.printStackTrace();
             }
         }
-//        System.err.println(result);
+
+        if(!StringUtils.isEmpty(result)){
+            return null;
+        }
         
         ResultList list = JSON.parseObject(result, ResultList.class);
-
-        
         List<App> apps = list.getData().get(0).getApp();//获取任务集合
         float money1 = 0.0f;
         float money2 = 0.0f;
@@ -120,26 +125,27 @@ public class ShikeAppServiceImpl implements IShikeAppService {
 				}
 			}
         	
-        	//遍历出金额最大且数量大于10个的对象
+        	//遍历出金额最大且数量大于0个的对象
         	for (int i = 0; i < apps.size(); i++) {
+                //判断当前任务是否在放弃任务集合中，包含则不需要抢该任务
+                boolean b = comUtil.judgeWhetherIncludeValue("shike", apps.get(i).getTrackId());
+                if(b) {
+                    continue;
+                }
+
         		money1 = Float.valueOf(apps.get(i).getMoney()).floatValue();
     			if(money1 >= money2 && apps.get(i).getNumber() > 0) {
-    				
-    				//判断当前任务是否在放弃任务集合中，包含则不需要抢该任务
-    				boolean b = comUtil.judgeWhetherIncludeValue("shike", apps.get(i).getTrackId());
-    				if(b) {
-    					continue;
-    				}
-    				
+                    money2 = money1;
     				app = apps.get(i);
     			}
     		}
         }
         String status = "";
-        
         if(null != app) {
+            System.out.println("找出最大结果：" + app.toString());
         	status = this.grabTask(app);
-        	if(status.contains("领取成功")) {
+        	System.out.println("领取结果：" + status);
+        	if(status.contains("成功")) {
         		resultUtil.setStatus(true);
         		resultUtil.setImg(app.getIcon());
         		resultUtil.setMsg("shike");
@@ -201,8 +207,7 @@ public class ShikeAppServiceImpl implements IShikeAppService {
             // flush输出流的缓冲
             out.flush();
             // 定义BufferedReader输入流来读取URL的响应
-            in = new BufferedReader(
-                    new InputStreamReader(conn.getInputStream()));
+            in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String line;
             while ((line = in.readLine()) != null) {
                 result += line;
