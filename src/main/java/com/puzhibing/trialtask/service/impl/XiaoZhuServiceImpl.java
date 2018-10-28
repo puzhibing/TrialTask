@@ -46,7 +46,7 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 		ResultUtil resultUtil = new ResultUtil();
 		boolean bl = false;
 		Long datetime = System.currentTimeMillis()/1000;
-		String dates = String.valueOf(datetime - 15000) + "," + String.valueOf(datetime - 9200) + "," + String.valueOf(datetime - 5400) + "," + String.valueOf(datetime);
+		String dates = String.valueOf(datetime - 15000) + "," + String.valueOf(datetime - 10000) + "," + String.valueOf(datetime - 5000) + "," + String.valueOf(datetime);
 		String path = "http://integral.xckoo.com/tasklist";
 		URL url = null;
 		try {
@@ -64,12 +64,13 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 			httpURLConnection.addRequestProperty("Accept-Encoding", "gzip, deflate");
 			httpURLConnection.addRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
 			httpURLConnection.addRequestProperty("Accept-Language", "zh-cn");
-			httpURLConnection.addRequestProperty("Cookie", "Hm_lvt_76d21571c9143a772d8e2f6cd4a0d38b=" + dates + "; sessionid=13u85o5t495xgefvncrg1smrpcardn7o");
+			httpURLConnection.addRequestProperty("Cookie", "Hm_lvt_76d21571c9143a772d8e2f6cd4a0d38b=" + dates + "; sessionid=t0xlc7che3cldt8k7vq14itpdc5zvd6q");
 			httpURLConnection.addRequestProperty("Connection", "keep-alive");
 			httpURLConnection.addRequestProperty("DNT", "1");
 			httpURLConnection.addRequestProperty("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 9_3_5 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13G36 Safari/601.1");
 			
 			httpURLConnection.connect();
+			
             
             //处理内容
             GZIPInputStream gzipInputStream = new GZIPInputStream(httpURLConnection.getInputStream());
@@ -131,20 +132,24 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 	
 	//解析结果DOM操作
 	public Map<String, Object> analysisResult(String html) {
+	    System.out.println(html);
 		Map<String, Object> map = new HashMap<>();
 		Document document = Jsoup.parse(html);
-		Element ongoing = document.getElementsByClass("ongoing").get(0);//获取又正在进行中的节点
-		if(ongoing.hasText()) {
-			Task task = new Task();
-			task.setImg(ongoing.getElementsByTag("img").get(0).attr("src"));
-			Element el = ongoing.getElementsByClass("app-name").get(0);
-			Element reward = ongoing.getElementsByClass("reward").get(0);
-			task.setBundleid(el.attr("bundleid"));
-			task.setReward(reward.text());
-			
-			map.put("status", true);//有正在进行的任务
-			map.put("task", task);
-			return map;
+		Elements els = document.getElementsByClass("ongoing");
+		if(els.size() > 0){
+			Element ongoing = els.get(0);//获取又正在进行中的节点
+			if(ongoing.hasText()) {
+				Task task = new Task();
+				task.setImg(ongoing.getElementsByTag("img").get(0).attr("src"));
+				Element el = ongoing.getElementsByClass("app-name").get(0);
+				Element reward = ongoing.getElementsByClass("reward").get(0);
+				task.setBundleid(el.attr("bundleid"));
+				task.setReward(reward.text());
+
+				map.put("status", true);//有正在进行的任务
+				map.put("task", task);
+				return map;
+			}
 		}
 		
 		//没有则遍历任务列

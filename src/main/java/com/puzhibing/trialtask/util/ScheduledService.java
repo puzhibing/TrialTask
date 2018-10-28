@@ -19,14 +19,14 @@ public class ScheduledService {
 	private XiaoZhuService xiaoZhuServiceImpl;
 
 
-    @Scheduled(cron = "0/3 * 9-23 * * *")
+    @Scheduled(cron = "0/5 * 9-23 * * *")
     public void scheduledShike(){
         System.out.println("shike.......");
         IShikeAppServiceImpl.getTaskList();
     }
     
     
-    @Scheduled(cron = "1/3 * 9-23 * * *")
+    @Scheduled(cron = "1/5 * 9-23 * * *")
     public void scheduledXiaozhu(){
         System.out.println("xiaozhu.......");
     	xiaoZhuServiceImpl.getTaskList();

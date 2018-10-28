@@ -2,13 +2,11 @@ package com.puzhibing.trialtask.service;
 
 import com.puzhibing.trialtask.util.ResultUtil;
 
-public interface IPPhongbaoService {
+public interface RehuluService {
 
-	
 	/**
-	 * 定义获取任务列表
-	 * @param url
+	 * 进入首页
 	 * @return
 	 */
-	public ResultUtil GetTaskList();
+	ResultUtil loginHome();
 }
