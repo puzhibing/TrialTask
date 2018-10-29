@@ -42,7 +42,7 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 	private Map<String , String> numMap = new HashMap<>();//计数器
 
 	@Override
-	public ResultUtil getTaskList() {
+	public ResultUtil getTaskList() throws Exception {
 		ResultUtil resultUtil = new ResultUtil();
 		boolean bl = false;
 		Long datetime = System.currentTimeMillis()/1000;
@@ -131,25 +131,26 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 	
 	
 	//解析结果DOM操作
-	public Map<String, Object> analysisResult(String html) {
-	    System.out.println(html);
+	public Map<String, Object> analysisResult(String html) throws Exception {
+
 		Map<String, Object> map = new HashMap<>();
 		Document document = Jsoup.parse(html);
 		Elements els = document.getElementsByClass("ongoing");
-		if(els.size() > 0){
-			Element ongoing = els.get(0);//获取又正在进行中的节点
-			if(ongoing.hasText()) {
-				Task task = new Task();
-				task.setImg(ongoing.getElementsByTag("img").get(0).attr("src"));
-				Element el = ongoing.getElementsByClass("app-name").get(0);
-				Element reward = ongoing.getElementsByClass("reward").get(0);
-				task.setBundleid(el.attr("bundleid"));
-				task.setReward(reward.text());
+		if(els.size() <= 0){
+			throw new Exception("sesionid过期，请重新获取");
+		}
+		Element ongoing = els.get(0);//获取又正在进行中的节点
+		if(ongoing.hasText()) {
+			Task task = new Task();
+			task.setImg(ongoing.getElementsByTag("img").get(0).attr("src"));
+			Element el = ongoing.getElementsByClass("app-name").get(0);
+			Element reward = ongoing.getElementsByClass("reward").get(0);
+			task.setBundleid(el.attr("bundleid"));
+			task.setReward(reward.text());
 
-				map.put("status", true);//有正在进行的任务
-				map.put("task", task);
-				return map;
-			}
+			map.put("status", true);//有正在进行的任务
+			map.put("task", task);
+			return map;
 		}
 		
 		//没有则遍历任务列

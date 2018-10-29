@@ -39,8 +39,16 @@ public class AppController {
 		List<ResultUtil> list = new ArrayList<>();
 		ResultUtil shike = iShikeAppServiceImpl.getTaskList();
 		list.add(shike);
-		
-		ResultUtil xiaozhu = xiaoZhuServiceImpl.getTaskList();
+
+		ResultUtil xiaozhu = null;
+		try {
+			xiaozhu = xiaoZhuServiceImpl.getTaskList();
+		} catch (Exception e) {
+			xiaozhu = new ResultUtil();
+			xiaozhu.setStatus(false);
+			xiaozhu.setMsg("sesionid过期，请重新获取");
+			e.printStackTrace();
+		}
 		list.add(xiaozhu);
 		
 		return list;

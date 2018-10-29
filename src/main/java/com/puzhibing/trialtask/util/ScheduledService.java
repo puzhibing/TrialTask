@@ -29,7 +29,12 @@ public class ScheduledService {
     @Scheduled(cron = "1/5 * 9-23 * * *")
     public void scheduledXiaozhu(){
         System.out.println("xiaozhu.......");
-    	xiaoZhuServiceImpl.getTaskList();
+        try {
+            xiaoZhuServiceImpl.getTaskList();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
     }
 
 }

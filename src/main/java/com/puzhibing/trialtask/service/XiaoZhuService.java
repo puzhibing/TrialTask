@@ -5,5 +5,5 @@ import com.puzhibing.trialtask.util.ResultUtil;
 public interface XiaoZhuService {
 
 	
-	ResultUtil getTaskList();
+	ResultUtil getTaskList() throws Exception;
 }
