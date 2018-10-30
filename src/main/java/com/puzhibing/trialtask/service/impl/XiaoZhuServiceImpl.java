@@ -132,7 +132,7 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 	
 	//解析结果DOM操作
 	public Map<String, Object> analysisResult(String html) throws Exception {
-
+//		System.out.println(html);
 		Map<String, Object> map = new HashMap<>();
 		Document document = Jsoup.parse(html);
 		Elements els = document.getElementsByClass("ongoing");
@@ -161,7 +161,8 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 			Task task = new Task();
 			task.setImg(e.getElementsByTag("img").get(0).attr("src"));
 			Element el = e.getElementsByClass("app-name").get(0);
-			Element tag = e.getElementsByClass("tag").get(0);
+			Elements elements1 =  e.getElementsByClass("tag");
+			Element tag = elements1.get(elements1.size() - 1);
 			Element reward = e.getElementsByClass("reward").get(0);
 			task.setUid(el.attr("uid"));
 			task.setMissionid(el.attr("missionid"));
@@ -224,7 +225,7 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 			httpURLConnection.addRequestProperty("Accept-Encoding", "gzip, deflate");
 			httpURLConnection.addRequestProperty("Accept-Language", "zh-cn");
 			
-			httpURLConnection.addRequestProperty("Cookie", "Hm_lvt_76d21571c9143a772d8e2f6cd4a0d38b=" + dates + "; sessionid=13u85o5t495xgefvncrg1smrpcardn7o");
+			httpURLConnection.addRequestProperty("Cookie", "Hm_lvt_76d21571c9143a772d8e2f6cd4a0d38b=" + dates + "; sessionid=t0xlc7che3cldt8k7vq14itpdc5zvd6q");
 			httpURLConnection.addRequestProperty("Connection", "keep-alive");
 			httpURLConnection.addRequestProperty("DNT", "1");
 			httpURLConnection.addRequestProperty("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 9_3_5 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13G36 Safari/601.1");
@@ -243,7 +244,7 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
             }
             System.err.println(result);
             Result res = JSON.parseObject(result, Result.class);
-            if(res.getRet() >= 0) {
+            if(res.getRet() == 0) {
             	bl = true;
             }else{
 				//判断计数器中是否有key
