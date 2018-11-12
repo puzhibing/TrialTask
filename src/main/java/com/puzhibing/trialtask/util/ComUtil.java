@@ -15,9 +15,12 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ComUtil {
-	
 
 	private Map<String, List<String>> map;
+
+	private Long startTime = 0L;
+
+
 
 	public ComUtil(){
 		map = new HashMap<>();
@@ -54,5 +57,14 @@ public class ComUtil {
 		}
 		
 		return b;
+	}
+
+
+	public Long getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(Long startTime) {
+		this.startTime = startTime;
 	}
 }

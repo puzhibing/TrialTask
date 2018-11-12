@@ -1,25 +1,22 @@
 package com.puzhibing.trialtask.service.impl;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import com.puzhibing.trialtask.util.ResourceUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSON;
@@ -29,6 +26,7 @@ import com.puzhibing.trialtask.service.XiaoZhuService;
 import com.puzhibing.trialtask.util.ComUtil;
 import com.puzhibing.trialtask.util.ResultUtil;
 import com.puzhibing.trialtask.util.SMSUtil;
+import org.springframework.util.StringUtils;
 
 @Service
 public class XiaoZhuServiceImpl implements XiaoZhuService {
@@ -39,7 +37,17 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 	@Autowired
     private ComUtil comUtil;
 
+	private String sessionid;
+
+	private String phone;
+
 	private Map<String , String> numMap = new HashMap<>();//计数器
+
+
+	public XiaoZhuServiceImpl(){
+		phone = ResourceUtil.getResourceUtil("parameter.properties").getValue("phone");
+		sessionid = ResourceUtil.getResourceUtil("parameter.properties").getValue("xiaozhu-sessionid");
+	}
 
 	@Override
 	public ResultUtil getTaskList() throws Exception {
@@ -64,7 +72,7 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 			httpURLConnection.addRequestProperty("Accept-Encoding", "gzip, deflate");
 			httpURLConnection.addRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
 			httpURLConnection.addRequestProperty("Accept-Language", "zh-cn");
-			httpURLConnection.addRequestProperty("Cookie", "Hm_lvt_76d21571c9143a772d8e2f6cd4a0d38b=" + dates + "; sessionid=t0xlc7che3cldt8k7vq14itpdc5zvd6q");
+			httpURLConnection.addRequestProperty("Cookie", "Hm_lvt_76d21571c9143a772d8e2f6cd4a0d38b=" + dates + "; sessionid=" + sessionid);
 			httpURLConnection.addRequestProperty("Connection", "keep-alive");
 			httpURLConnection.addRequestProperty("DNT", "1");
 			httpURLConnection.addRequestProperty("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 9_3_5 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13G36 Safari/601.1");
@@ -82,6 +90,11 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
             }
             
             Map<String, Object> map = analysisResult(out.toString());
+            if(map == null){
+				resultUtil.setStatus(false);
+				resultUtil.setMsg("正在获取登录验证码");
+            	return resultUtil;
+			}
             if((boolean)map.get("status")) {//判断是否有任务正在进行中
             	Task task = (Task)map.get("task");
             	resultUtil.setMsg("xiaozhu");
@@ -127,9 +140,8 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 		
 		return resultUtil;
 	}
-	
-	
-	
+
+
 	//解析结果DOM操作
 	public Map<String, Object> analysisResult(String html) throws Exception {
 //		System.out.println(html);
@@ -137,9 +149,11 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 		Document document = Jsoup.parse(html);
 		Elements els = document.getElementsByClass("ongoing");
 		if(els.size() <= 0){
-			throw new Exception("sesionid过期，请重新获取");
+			getVerificationCode();//调用获取验证码请求
+			System.out.println("sesionid过期，请重新获取");
+			return null;
 		}
-		Element ongoing = els.get(0);//获取又正在进行中的节点
+		Element ongoing = els.get(0);//获取正在进行中的节点
 		if(ongoing.hasText()) {
 			Task task = new Task();
 			task.setImg(ongoing.getElementsByTag("img").get(0).attr("src"));
@@ -225,7 +239,7 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 			httpURLConnection.addRequestProperty("Accept-Encoding", "gzip, deflate");
 			httpURLConnection.addRequestProperty("Accept-Language", "zh-cn");
 			
-			httpURLConnection.addRequestProperty("Cookie", "Hm_lvt_76d21571c9143a772d8e2f6cd4a0d38b=" + dates + "; sessionid=t0xlc7che3cldt8k7vq14itpdc5zvd6q");
+			httpURLConnection.addRequestProperty("Cookie", "Hm_lvt_76d21571c9143a772d8e2f6cd4a0d38b=" + dates + "; sessionid=" + sessionid);
 			httpURLConnection.addRequestProperty("Connection", "keep-alive");
 			httpURLConnection.addRequestProperty("DNT", "1");
 			httpURLConnection.addRequestProperty("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 9_3_5 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13G36 Safari/601.1");
@@ -261,5 +275,131 @@ public class XiaoZhuServiceImpl implements XiaoZhuService {
 			e.printStackTrace();
 		}
 		return bl;
+	}
+
+
+	/**
+	 * 获取验证码
+	 * @return
+	 */
+	@Override
+	public boolean getVerificationCode() {
+		if(comUtil.getStartTime() != 0 ){//
+			return false;
+		}
+
+		Long datetime = System.currentTimeMillis()/1000;
+		String dates = String.valueOf(datetime - 10000) + "," + String.valueOf(datetime - 5000) + "," + String.valueOf(datetime);
+
+		String path = "http://integral.xckoo.com/telcode?phone=" + phone;
+		URL url = null;
+		boolean b = false;
+
+		try {
+			url = new URL(path);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		try {
+			HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
+			httpURLConnection.addRequestProperty("Host","integral.xckoo.com");
+			httpURLConnection.addRequestProperty("Referer","http://integral.xckoo.com/tellogin?isBind=no");
+			httpURLConnection.addRequestProperty("X-Requested-With","XMLHttpRequest");
+			httpURLConnection.addRequestProperty("Connection","keep-alive");
+			httpURLConnection.addRequestProperty("Accept","application/json, text/javascript, */*; q=0.01");
+			httpURLConnection.addRequestProperty("Accept-Encoding","gzip, deflate");
+			httpURLConnection.addRequestProperty("Accept-Language","zh-cn");
+			httpURLConnection.addRequestProperty("Cookie","Hm_lvt_76d21571c9143a772d8e2f6cd4a0d38b=" + dates);
+			httpURLConnection.addRequestProperty("Connection","keep-alive");
+			httpURLConnection.addRequestProperty("DNT","1");
+			httpURLConnection.addRequestProperty("User-Agent","Mozilla/5.0 (iPhone; CPU iPhone OS 9_3_5 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13G36 Safari/601.1");
+
+			httpURLConnection.connect();
+			//处理内容
+			GZIPInputStream gzipInputStream = new GZIPInputStream(httpURLConnection.getInputStream());
+			byte[] bytes = new byte[1024];
+			int i;
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			while((i = gzipInputStream.read(bytes)) != -1) {
+				out.write(bytes, 0, i);
+			}
+			Result res = JSON.parseObject(out.toString(), Result.class);
+			if(res.getRet() == 0){
+				comUtil.setStartTime(new Date().getTime());//记录首次发送请求的时间
+				System.out.println("获取验证码请求已发送");
+				b = true;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return b;
+	}
+
+	/**
+	 * 输入验证码登录
+	 * @param vc
+	 * @return
+	 */
+	@Override
+	public boolean verifyLogin(String vc) {
+		boolean b = false;
+		if(!StringUtils.isEmpty(vc)){
+			Long datetime = System.currentTimeMillis()/1000;
+			String dates = String.valueOf(datetime - 10000) + "," + String.valueOf(datetime - 5000) + "," + String.valueOf(datetime);
+			String path = "http://integral.xckoo.com/tellogincodecheck?phone=" + phone + "&code=" + vc;
+			URL url = null;
+			try {
+				url = new URL(path);
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			}
+			try {
+				HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
+				httpURLConnection.addRequestProperty("Host","integral.xckoo.com");
+				httpURLConnection.addRequestProperty("Referer","http://integral.xckoo.com/tellogin?isBind=no");
+				httpURLConnection.addRequestProperty("X-Requested-With","XMLHttpRequest");
+				httpURLConnection.addRequestProperty("Connection","keep-alive");
+				httpURLConnection.addRequestProperty("Accept","application/json, text/javascript, */*; q=0.01");
+				httpURLConnection.addRequestProperty("Accept-Encoding","gzip, deflate");
+				httpURLConnection.addRequestProperty("Accept-Language","zh-cn");
+				httpURLConnection.addRequestProperty("Cookie","Hm_lvt_76d21571c9143a772d8e2f6cd4a0d38b=" + dates);
+				httpURLConnection.addRequestProperty("Connection","keep-alive");
+				httpURLConnection.addRequestProperty("DNT","1");
+				httpURLConnection.addRequestProperty("User-Agent","Mozilla/5.0 (iPhone; CPU iPhone OS 9_3_5 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13G36 Safari/601.1");
+
+				httpURLConnection.connect();
+				//处理内容
+				GZIPInputStream gzipInputStream = new GZIPInputStream(httpURLConnection.getInputStream());
+				byte[] bytes = new byte[1024];
+				int i;
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+				while((i = gzipInputStream.read(bytes)) != -1) {
+					out.write(bytes, 0, i);
+				}
+				Result res = JSON.parseObject(out.toString(), Result.class);
+				if(res.getRet() == 0){
+					comUtil.setStartTime(0L);//将时间及还原为初始值
+					System.out.println("验证码登录成功");
+
+					Map<String,List<String>> map = httpURLConnection.getHeaderFields();
+					String session = "";
+					if(map.size() > 0){
+						for (String key : map.keySet()) {
+                    		System.out.println(key + "--->" + map.get(key));
+						}
+					}
+					try {
+						ResourceUtil.getResourceUtil("parameter.properties").setValue("xiaozhu-sessionid",session);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					b = true;
+				}
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return b;
 	}
 }
