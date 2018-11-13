@@ -27,11 +27,20 @@ span {
 </style>
 <body>
 	<div class="content">
-		<input type="hidden" class="appType" /> <input type="hidden"
-			class="identifier" />
-		<button class="refresh">刷新</button>
-		<br />
-		<button class="giveUpTask">放弃任务</button>
+		<div>
+			<span>验证码：</span>
+			<input type="text" id="value">
+			<button id="xiaozhu" data="xiaozhu-sessionid">小猪</button>
+			<span id="result"></span>
+		</div>
+		<div>
+			<input type="hidden" class="appType" /> <input type="hidden"
+														   class="identifier" />
+			<button class="refresh">刷新</button>
+			<br />
+			<button class="giveUpTask">放弃任务</button>
+		</div>
+
 	</div>
 
 </body>
@@ -48,6 +57,10 @@ span {
 		$(".refresh").click(function() {
 			obtainTaskId();
 		});
+		
+		$('.submit').click(function () {
+			
+        });
 	});
 
 	//获取成功抢得的任务id
@@ -114,6 +127,32 @@ span {
 					obtainTaskId();
 				}
 			}
+		});
+	}
+	
+	
+	
+	//输入验证码登录
+	function setValue(){
+	    let value = $('#value').val();
+	    let key = $('#xiaozhu').attr('data')
+	    if(value == ''){
+	        return;
+		}
+		$.ajax({
+			url: '/setValue',
+			type: 'POST',
+			data: {
+			    key: key,
+                value: value
+			},
+			success: function (res) {
+				if(res == true){
+				    $('#result').text('添加成功！');
+				}else{
+                    $('#result').text('添加失败！');
+				}
+            }
 		});
 	}
 </script>

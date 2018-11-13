@@ -119,7 +119,6 @@ public class ResourceUtil {
 
             if(b){
                 this.writeData(stringBuffer.toString());
-                System.err.println(stringBuffer.toString());
             }else{
                 throw new Exception(key + "：在文件中未定义");
             }
@@ -174,8 +173,6 @@ public class ResourceUtil {
      */
     public void writeData(String str){
         File file = null;
-        FileOutputStream fileOutputStream = null;
-        OutputStreamWriter outputStreamWriter = null;
         BufferedWriter bufferedWriter = null;
         try {
             file = ResourceUtils.getFile("classpath:" + this.fileName);
@@ -184,30 +181,20 @@ public class ResourceUtil {
             e.printStackTrace();
         }
         try {
+            bufferedWriter = new BufferedWriter(new FileWriter(file));
 
-            fileOutputStream = new FileOutputStream(file);
-            outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-            bufferedWriter = new BufferedWriter(outputStreamWriter);
-            PrintWriter printWriter = new PrintWriter(outputStreamWriter);
             String[] strings = str.trim().split("&");
             for (int i = 0 ; i < strings.length ; i++){
-                printWriter.write(strings[i]);
-                printWriter.flush();
-//                bufferedWriter.write(strings[i]);
-//                bufferedWriter.newLine();
-//                bufferedWriter.flush();
+                bufferedWriter.write(strings[i]);
+                bufferedWriter.newLine();
+                bufferedWriter.flush();
             }
-            printWriter.close();
             bufferedWriter.close();
-            outputStreamWriter.close();
-            fileOutputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }finally {
             try {
                 bufferedWriter.close();
-                outputStreamWriter.close();
-                fileOutputStream.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }

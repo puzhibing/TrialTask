@@ -3,6 +3,7 @@ package com.puzhibing.trialtask.controller;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.puzhibing.trialtask.util.ResourceUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -69,4 +70,23 @@ public class AppController {
 		resultUtil.setStatus(true);
 		return resultUtil;
 	}
+
+
+	/**
+	 * 添加配置文件内容
+	 * @param key
+	 * @param value
+	 */
+	@RequestMapping(value = "/setValue")
+	public boolean setValue(String key , String value){
+		boolean b = false;
+		try {
+			ResourceUtil.getResourceUtil("parameter.txt").setValue(key , value);
+			b = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return b;
+	}
+
 }
